@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CertDesk · Issue & Verify Certificates</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M10 16.5l4 4 8-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        CertDesk
+      </a>
+
+      <nav class="tabs" aria-label="Main">
+        <button class="tab" data-tab="certificates">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
+          Certificates
+        </button>
+        <button class="tab" data-tab="issue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Issue
+        </button>
+        <button class="tab" data-tab="verify">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          Verify
+        </button>
+        <button class="tab" data-tab="email">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          Email setup
+          <span class="tab-dot" id="email-dot" aria-hidden="true"></span>
+        </button>
+      </nav>
+
+      <div class="user">
+        <div class="user-meta">
+          <span class="user-name" id="user-name"></span>
+          <span class="user-email" id="user-email"></span>
+        </div>
+        <span class="avatar" id="user-avatar" aria-hidden="true"></span>
+        <button id="logout-btn" class="btn btn-ghost btn-sm" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>
+          <span class="logout-label">Sign out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 1. Certificates list -->
+    <section id="tab-certificates" class="panel">
+      <div class="page-head">
+        <div>
+          <h1>Certificates</h1>
+          <p class="page-sub">Everything you've issued, newest first.</p>
+        </div>
+        <button class="btn btn-primary" data-goto="issue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Issue certificate
+        </button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="stat-label">Total</span><span class="stat-value" id="stat-total">–</span></div>
+        <div class="stat ok"><span class="stat-label">Active</span><span class="stat-value" id="stat-active">–</span></div>
+        <div class="stat bad"><span class="stat-label">Revoked</span><span class="stat-value" id="stat-revoked">–</span></div>
+      </div>
+
+      <div class="card table-card">
+        <div class="toolbar">
+          <div class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search" type="search" placeholder="Search by recipient name" aria-label="Search by recipient name" autocomplete="off" />
+          </div>
+          <div class="segmented" id="status-filter" role="group" aria-label="Filter by status">
+            <button type="button" class="active" data-status="" aria-pressed="true">All</button>
+            <button type="button" data-status="active" aria-pressed="false">Active</button>
+            <button type="button" data-status="revoked" aria-pressed="false">Revoked</button>
+          </div>
+        </div>
+
+        <div id="list-message" class="alert hidden" role="alert"></div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Certificate ID</th>
+                <th>Recipient</th>
+                <th>Course</th>
+                <th>Issued</th>
+                <th>Status</th>
+                <th class="actions-col"><span class="hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="cert-rows"></tbody>
+          </table>
+        </div>
+
+        <div class="table-foot">
+          <span id="page-info" class="muted"></span>
+          <div class="pager">
+            <button id="prev-page" class="btn btn-secondary btn-sm">&larr; Previous</button>
+            <button id="next-page" class="btn btn-secondary btn-sm">Next &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Issue form -->
+    <section id="tab-issue" class="panel">
+      <div class="page-head">
+        <div>
+          <h1>Issue a certificate</h1>
+          <p class="page-sub">Fill in the details. The preview updates as you type.</p>
+        </div>
+      </div>
+
+      <div class="issue-grid">
+        <form id="issue-form" class="card form-card stack" novalidate>
+          <div class="field">
+            <label for="recipient_name">Recipient name</label>
+            <input id="recipient_name" name="recipient_name" type="text" placeholder="e.g. Priya Nair" autocomplete="off" />
+            <small class="field-error" data-for="recipient_name"></small>
+          </div>
+          <div class="field">
+            <label for="recipient_email">Recipient email</label>
+            <input id="recipient_email" name="recipient_email" type="email" placeholder="e.g. priya@example.com" autocomplete="off" />
+            <small class="field-error" data-for="recipient_email"></small>
+          </div>
+          <div class="field">
+            <label for="course_name">Course name</label>
+            <input id="course_name" name="course_name" type="text" placeholder="e.g. Flask Web Development" autocomplete="off" />
+            <small class="field-error" data-for="course_name"></small>
+          </div>
+          <div class="field">
+            <label for="issue_date">Issue date</label>
+            <input id="issue_date" name="issue_date" type="date" />
+            <small class="field-error" data-for="issue_date"></small>
+          </div>
+
+          <!-- Where the certificate email goes from (filled in by app.js) -->
+          <div id="delivery"></div>
+
+          <div id="issue-message" class="alert hidden" role="alert"></div>
+
+          <div class="form-actions">
+            <button type="button" id="issue-clear" class="btn btn-secondary">Clear</button>
+            <button type="submit" class="btn btn-primary">
+              <span class="spinner" aria-hidden="true"></span><span>Issue certificate</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="preview-col">
+          <div class="cert-preview" id="cert-preview" aria-label="Certificate preview">
+            <div class="cp-inner">
+              <div class="cp-head">
+                <span class="cp-brand">CertDesk</span>
+                <span class="cp-id mono" id="pv-id">CERT-········</span>
+              </div>
+              <div class="cp-kicker">Certificate</div>
+              <div class="cp-title">of Completion</div>
+              <div class="cp-text">This certifies that</div>
+              <div class="cp-name" id="pv-name">Recipient name</div>
+              <div class="cp-text">has successfully completed</div>
+              <div class="cp-course" id="pv-course">Course name</div>
+              <div class="cp-foot">
+                <div>
+                  <span class="cp-label">Issued on</span>
+                  <span id="pv-date">–</span>
+                </div>
+                <div class="cp-seal" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="preview-note" id="preview-note">Preview. The certificate ID is created when you issue it.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Verify -->
+    <section id="tab-verify" class="panel">
+      <div class="verify-wrap">
+        <div class="verify-hero">
+          <span class="hero-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <h1>Verify a certificate</h1>
+          <p class="page-sub">Enter a certificate ID to check that it's genuine and still valid.</p>
+        </div>
+
+        <form id="verify-form" class="card verify-form">
+          <input name="cert_id" type="text" placeholder="CERT-9F3A21BC" aria-label="Certificate ID" autocomplete="off" spellcheck="false" />
+          <button type="submit" class="btn btn-primary">
+            <span class="spinner" aria-hidden="true"></span><span>Verify</span>
+          </button>
+        </form>
+
+        <div id="verify-result" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 4. Email setup -->
+    <section id="tab-email" class="panel">
+      <div class="page-head">
+        <div>
+          <h1>Email setup</h1>
+          <p class="page-sub">Connect a Gmail account so issued certificates are emailed to recipients from your address.</p>
+        </div>
+      </div>
+
+      <!-- Connection status (filled in by app.js) -->
+      <div id="email-status" class="card email-status"></div>
+
+      <div class="email-grid">
+        <form id="email-form" class="card form-card stack" novalidate>
+          <div class="field">
+            <label for="from_name">Sender name <span class="optional">Optional</span></label>
+            <input id="from_name" name="from_name" type="text" placeholder="e.g. CertDesk Academy" autocomplete="off" />
+            <small class="hint">Recipients see this as the sender. If empty, your name is used.</small>
+            <small class="field-error" data-for="from_name"></small>
+          </div>
+          <div class="field">
+            <label for="smtp_email">Gmail address</label>
+            <input id="smtp_email" name="email" type="email" placeholder="you@gmail.com" autocomplete="off" />
+            <small class="field-error" data-for="email"></small>
+          </div>
+          <div class="field">
+            <label for="app_password">Google app password</label>
+            <div class="input-group">
+              <input id="app_password" name="app_password" type="password" class="mono" placeholder="xxxx xxxx xxxx xxxx" autocomplete="new-password" spellcheck="false" />
+              <button type="button" class="input-addon" data-toggle-password="app_password" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <small class="hint">The 16-character code from Google, <strong>not</strong> your normal Gmail password.</small>
+            <small class="field-error" data-for="app_password"></small>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="smtp_host">SMTP server</label>
+              <input id="smtp_host" name="smtp_host" type="text" value="smtp.gmail.com" autocomplete="off" spellcheck="false" />
+              <small class="field-error" data-for="smtp_host"></small>
+            </div>
+            <div class="field">
+              <label for="smtp_port">Port</label>
+              <input id="smtp_port" name="smtp_port" type="number" inputmode="numeric" min="1" max="65535" value="587" />
+              <small class="hint">587 (STARTTLS) or 465 (SSL)</small>
+              <small class="field-error" data-for="smtp_port"></small>
+            </div>
+          </div>
+
+          <div id="email-message" class="alert hidden" role="alert"></div>
+
+          <div class="form-actions">
+            <button type="button" id="email-defaults" class="btn btn-ghost">Use Gmail defaults</button>
+            <button type="submit" class="btn btn-primary">
+              <span class="spinner" aria-hidden="true"></span><span>Verify &amp; save</span>
+            </button>
+          </div>
+        </form>
+
+        <aside class="card help-card">
+          <h2>How to get a Google app password</h2>
+          <ol class="steps">
+            <li>
+              <strong>Turn on 2-Step Verification</strong> for your Google account (Google Authenticator, a phone prompt or SMS).
+              <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noopener noreferrer">Open 2-Step Verification&nbsp;&#8599;</a>
+            </li>
+            <li>
+              <strong>Create an app password.</strong> Open
+              <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">App passwords&nbsp;&#8599;</a>,
+              type a name such as "CertDesk" and click <em>Create</em>.
+            </li>
+            <li><strong>Copy the 16-character code</strong> Google shows you and paste it into <em>Google app password</em>. Spaces don't matter.</li>
+            <li><strong>Click Verify &amp; save.</strong> CertDesk signs in to Gmail to check the password before it saves anything.</li>
+          </ol>
+          <p class="help-note">
+            Google shows the code only once. If you lose it, delete it and create a new one.
+            Don't see <em>App passwords</em>? It only appears when 2-Step Verification is on, and some work or school accounts turn it off.
+          </p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confirmation dialog (used by Revoke) -->
+  <dialog id="confirm-dialog" class="dialog" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <div class="dialog-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+      </div>
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-body"></p>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn btn-secondary">Cancel</button>
+        <button value="confirm" id="confirm-ok" class="btn btn-danger"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/common.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
