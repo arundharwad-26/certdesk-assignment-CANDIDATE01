@@ -17,6 +17,7 @@ def create_app(test_config=None):
     os.makedirs(app.instance_path, exist_ok=True)
     app.config.from_mapping(
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-change-me"),
+        EMAIL_ENCRYPTION_KEY=os.environ.get("EMAIL_ENCRYPTION_KEY"),
         SESSION_COOKIE_SAMESITE="Lax",
         DATABASE=os.environ.get(
             "DATABASE_PATH", os.path.join(app.instance_path, "certificates.db")
@@ -32,10 +33,12 @@ def create_app(test_config=None):
     from .auth import auth_bp
     from .email_settings import email_bp
     from .routes import bp
+    from .bulk import bulk_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(bp)
     app.register_blueprint(email_bp)
+    app.register_blueprint(bulk_bp)
 
     # Pages. The app needs a login; the login and sign-up pages don't.
     @app.get("/")

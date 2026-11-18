@@ -1,5 +1,5 @@
 """Sign-up, login and session handling."""
-import base64
+from werkzeug.security import generate_password_hash, check_password_hash
 import functools
 
 from flask import Blueprint, g, jsonify, request, session
@@ -12,9 +12,9 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 def hash_password(password):
-    """Return the value we store in users.password_hash for this password."""
-    return base64.b64encode(password.encode("utf-8")).decode("ascii")
-
+    """Securely hash a password before storing it."""
+    return generate_password_hash(password)
+    
 
 def user_to_dict(row):
     """Public shape of a user. Never includes the password."""
@@ -52,7 +52,7 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped(*args, **kwargs):
         if g.user is None:
-            _unauthorized()
+           return _unauthorized()
         return view(*args, **kwargs)
 
     return wrapped
@@ -108,9 +108,12 @@ def login():
 
     email = email.strip().lower()
     user = get_db().execute(
-        f"SELECT * FROM users WHERE email = '{email}' "
-        f"AND password_hash = '{hash_password(password)}'"
+        "SELECT * FROM users WHERE email = ?",
+        (email,),
     ).fetchone()
+
+    if user is None or not check_password_hash(user["password_hash"], password):
+        return _unauthorized("Invalid email or password")
     if user is None:
         return _unauthorized("Invalid email or password")
 

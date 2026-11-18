@@ -7,3 +7,5 @@ instance/
 *.db
 .env
 .DS_Store
+*.key
+bulk-test.csv

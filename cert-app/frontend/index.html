@@ -29,6 +29,9 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Issue
         </button>
+        <button class="tab" data-tab="bulk">
+          Bulk issue
+        </button>
         <button class="tab" data-tab="verify">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
           Verify
@@ -188,7 +191,27 @@
         </div>
       </div>
     </section>
+    <section id="tab-bulk" class="panel">
+      <div class="card">
+        <h2>Bulk Issue Certificates</h2>
+        <p>Upload a CSV file to issue multiple certificates.</p>
 
+        <form id="bulk-upload-form">
+          <label for="bulk-csv-file">Choose CSV file</label>
+          <input
+            type="file"
+            id="bulk-csv-file"
+            accept=".csv,text/csv"
+            required
+          />
+        <button type="submit">Upload CSV</button>
+        </form>
+
+      <div id="bulk-preview"></div>
+      <div id="bulk-progress"></div>
+      <div id="bulk-results"></div>
+    </div>
+  </section>
     <!-- 3. Verify -->
     <section id="tab-verify" class="panel">
       <div class="verify-wrap">

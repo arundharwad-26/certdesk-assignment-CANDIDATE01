@@ -1,4 +1,6 @@
 import re
+from datetime import date
+from .helpers import parse_date
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PASSWORD_MIN_LEN = 8
 PASSWORD_MAX_LEN = 128
@@ -46,5 +48,38 @@ def validate_signup_payload(data):
     else:
         # Not trimmed on purpose: spaces are allowed in passwords.
         cleaned["password"] = password
+
+    return cleaned, errors
+
+
+def validate_certificate_payload(data):
+    errors, cleaned = {}, {}
+
+    _text(data, "recipient_name", 2, 100, errors, cleaned)
+    _email(data, "recipient_email", errors, cleaned)
+    _text(data, "course_name", 2, 150, errors, cleaned)
+
+    issue_date = data.get("issue_date")
+
+    if issue_date is None or issue_date == "":
+        errors["issue_date"] = "This field is required"
+    elif not isinstance(issue_date, str):
+        errors["issue_date"] = "Must be a string"
+    else:
+        issue_date = issue_date.strip()
+
+        try:
+            parsed_date = parse_date(issue_date)
+
+            if parsed_date > date.today():
+                errors["issue_date"] = "Issue date cannot be in the future"
+            else:
+                cleaned["issue_date"] = issue_date
+
+        except ValueError:
+            errors["issue_date"] = "Must be a valid date in YYYY-MM-DD format"
+
+    if "recipient_email" in cleaned:
+        cleaned["recipient_email"] = cleaned["recipient_email"].lower()
 
     return cleaned, errors
